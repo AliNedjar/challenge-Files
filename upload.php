@@ -1,3 +1,43 @@
+<?php
+
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        if (!isset($_POST['submit'])) {
+
+            for ($i = 0; $i < count($_FILES['file']['name']); $i++) {
+
+                $errors = [];
+
+                if (empty($_FILES['file']['name'][$i])) {
+                    $errors[] = "No file has been selected!";
+                }
+
+                if ($_FILES['file']['size'][$i] > 1000000) {
+                    $errors[] = 'Your file is too big!';
+                }
+
+                $allowed = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!in_array($_FILES['file']['type'][$i], $allowed)) {
+                    $errors[] = 'you cannot upload files of this type!';
+                }
+
+                if (!empty($errors)) { ?>
+                    <ul> <?php
+                        foreach ($errors as $error): ?>
+                            <li> <?= $error; ?> </li> <?php
+                        endforeach; ?>
+                    </ul> <?php
+                } else {
+                    $fileDestination = 'uploads/';
+                    $fileExtension = pathinfo($_FILES['file']['name'][$i], PATHINFO_EXTENSION);
+                    $fileNameNew = uniqid() . '.' . $fileExtension;
+                    $fileUpload = $fileDestination . basename($fileNameNew);
+                    move_uploaded_file($_FILES['file']['tmp_name'][$i], $fileUpload);
+                    header('Location: upload.php?uploadsuccess');
+                }
+            }
+        }
+    }
+    ?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,63 +49,20 @@
 </head>
 <body>
 <form action="upload.php" method="POST" enctype="multipart/form-data">
-    <label for="imageUpload">Upload an profile image</label>
-    <input type="file" name="file" id="imageUpload"/>
-    <button type="submit" name="submit">Upload</button>
-
-
-    <?php
-
-    $files = new FilesystemIterator('uploads', FilesystemIterator::KEY_AS_FILENAME);
-
-    if (isset($_POST['submit'])) {
-        $file = $_FILES['file'];
-
-        $fileName = $_FILES['file']['name'];
-        $fileTmpName = $_FILES['file']['tmp_name'];
-        $fileSize = $_FILES['file']['size'];
-        $fileError = $_FILES['file']['error'];
-        $fileType = $_FILES['file']['type'];
-
-
-        $fileExt = explode('.', $fileName);
-        $fileActualExt = strtolower(end($fileExt));
-
-        $allowed = array('jpg', 'png', 'gif');
-
-        if (in_array($fileActualExt, $allowed)) {
-            if ($fileError === 0) {
-                if ($fileSize < 1000000) {
-                    $fileNameNew = uniqid('', true) . '.' . $fileActualExt;
-                    $fileDestination = 'uploads/' . $fileNameNew;
-                    move_uploaded_file($fileTmpName, $fileDestination);
-                    header('Location: upload.php?uploadsuccess');
-                } else {
-                    echo 'Your file is too big!';
-                }
-            } else {
-                echo 'there was an error uploading your file!';
-            }
-        } else {
-            echo 'you cannot upload files of this type!';
-        }
-    }
-
-
-    $files = new FilesystemIterator('uploads', FilesystemIterator::KEY_AS_FILENAME);
-    foreach ($files as $file) {
-        ?>
-        <figure>
-            <img src="uploads/<?php echo $file->getFilename() ?>"
-                 alt="<?php $file->getFilename() ?>">
-            <figcaption> <?php $file->getFilename() ?> </figcaption>
-        </figure>
-    <?php
-    }
-    ?>
-
-
-
+        <label for="imageUpload">Upload a profile image:</label>
+        <input type="file" name="file[]" id="imageUpload" multiple="multiple">
+        <button type="submit">Upload</button>
 </form>
-</body>
-</html>
+<?php
+
+$files = new FilesystemIterator('uploads/', FilesystemIterator::KEY_AS_FILENAME);
+
+foreach ($files as $file) {
+    $file->getFilename(); ?>
+    <figure>
+    <img src="<?= 'uploads/' . $file->getFilename() ?>" alt="profilePicture">
+    <figcaption><?= $file->getFilename() ?></figcaption>
+    </figure><?php
+} ?>
+
+
