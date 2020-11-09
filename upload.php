@@ -13,7 +13,11 @@
     <input type="file" name="file" id="imageUpload"/>
     <button type="submit" name="submit">Upload</button>
 
+
     <?php
+
+    $files = new FilesystemIterator('uploads', FilesystemIterator::KEY_AS_FILENAME);
+
     if (isset($_POST['submit'])) {
         $file = $_FILES['file'];
 
@@ -48,16 +52,18 @@
     }
 
 
-    $files = new FilesystemIterator(__DIR__ . '/uploads', FilesystemIterator::SKIP_DOTS);
-    foreach ($files as $file):
+    $files = new FilesystemIterator('uploads', FilesystemIterator::KEY_AS_FILENAME);
+    foreach ($files as $file) {
         ?>
         <figure>
-            <img src="uploads/<?php $file->getFilename() ?>"
+            <img src="uploads/<?php echo $file->getFilename() ?>"
                  alt="<?php $file->getFilename() ?>">
             <figcaption> <?php $file->getFilename() ?> </figcaption>
         </figure>
-    <?php endforeach;
+    <?php
+    }
     ?>
+
 
 
 </form>
